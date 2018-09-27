@@ -9,6 +9,7 @@ import pyaudio
 import time
 import numpy as np
 import threading
+import matplotlib.pyplot as plt
 
 def getFFT(data,rate):
     """Given some data and rate, returns FFTfreq and FFT (half)."""
@@ -151,9 +152,17 @@ if __name__=="__main__":
     ear=SWHear(updatesPerSecond=10) # optinoally set sample rate here
     ear.stream_start() #goes forever
     lastRead=ear.chunksRead
+    plt.ion()
     while True:
         while lastRead==ear.chunksRead:
             time.sleep(.01)
-        print(ear.chunksRead,len(ear.data))
+        # print(ear.chunksRead,len(ear.data))
         lastRead=ear.chunksRead
+        fre, fftdata = getFFT(ear.data, ear.rate)
+        # print(fre, fftdata)
+
+        plt.cla()
+        plt.plot(fre, fftdata)
+        plt.pause(0.001)
+
     print("DONE")
