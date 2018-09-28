@@ -11,6 +11,7 @@ import numpy as np
 import threading
 import matplotlib.pyplot as plt
 
+
 def getFFT(data,rate):
     """Given some data and rate, returns FFTfreq and FFT (half)."""
     data=data*np.hamming(len(data))
@@ -19,6 +20,22 @@ def getFFT(data,rate):
     #fft=10*np.log10(fft)
     freq=np.fft.fftfreq(len(fft),1.0/rate)
     return freq[:int(len(freq)/2)],fft[:int(len(fft)/2)]
+
+
+def smoothing(x, window_len=11, window='hanning'):
+    if x.size < window_len:
+        print("Input vector needs to be bigger than window size.")
+    if window_len<3:
+        return x
+    if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        print("Window type not support")
+    s = np.r_[2 * x[0] - x[window_len - 1::-1], x, 2 * x[-1] - x[-1:-window_len:-1]]
+    if window == 'flat':
+        w = np.ones(window_len, 'd')
+    else:
+        w = eval('np.' + window + '(window_len)')
+        y = np.convolve(w/w.sum(), s, mode='same')
+        return y[window_len:-window_len+1]
 
 class SWHear():
     """
@@ -161,8 +178,13 @@ if __name__=="__main__":
         fre, fftdata = getFFT(ear.data, ear.rate)
         # print(fre, fftdata)
 
+        smoothed = smoothing(ear.data, window_len=len(ear.data), window='blackman')
+
+
         plt.cla()
-        plt.plot(fre, fftdata)
+        # plt.plot(fre, fftdata)
+        # plt.plot(ear.datax, ear.data)
+        plt.plot(ear.datax, smoothed)
         plt.pause(0.001)
 
     print("DONE")
