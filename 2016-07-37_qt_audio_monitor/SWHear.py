@@ -10,6 +10,9 @@ import time
 import numpy as np
 import threading
 import matplotlib.pyplot as plt
+import filter as filter
+from scipy.signal import butter, lfilter, freqz
+
 
 
 def getFFT(data,rate):
@@ -165,6 +168,7 @@ class SWHear():
                       rate=self.rate,input=True,frames_per_buffer=self.chunk)
         self.stream_thread_new()
 
+
 if __name__=="__main__":
     ear=SWHear(updatesPerSecond=10) # optinoally set sample rate here
     ear.stream_start() #goes forever
@@ -178,13 +182,25 @@ if __name__=="__main__":
         fre, fftdata = getFFT(ear.data, ear.rate)
         # print(fre, fftdata)
 
-        smoothed = smoothing(ear.data, window_len=len(ear.data), window='blackman')
+        # smoothed = smoothing(ear.data, window_len=len(ear.data), window='blackman')
+        # filter
+        cutoff = 4000
 
+        b, a = filter.butter_lowpass(cutoff, ear.rate, order=6)
+        w, h = freqz(b, a, worN=8000)
+        plt.plot(0.5 * ear.rate * w / np.pi, np.abs(h), 'b')
+        plt.plot(cutoff, 0.5 * np.sqrt(2), 'ko')
+        plt.axvline(cutoff, color='k')
+        plt.xlim(0, 0.5 * ear.rate)
+        plt.title("Lowpass Filter Frequency Response")
+        plt.xlabel('Frequency [Hz]')
+        plt.grid()
 
-        plt.cla()
-        # plt.plot(fre, fftdata)
-        # plt.plot(ear.datax, ear.data)
-        plt.plot(ear.datax, smoothed)
-        plt.pause(0.001)
+        # plt.cla()
+        # filtered_data = filter.butter_lowpass_filter(ear.data, cutoff, ear.rate, order=6)
+        # plt.plot(ear.datax, filtered_data)
+        # plt.grid()
+        # plt.pause(0.001)
+
 
     print("DONE")
